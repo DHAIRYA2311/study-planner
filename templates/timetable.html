@@ -41,54 +41,67 @@
     </ul>
 
     <div class="tab-content mt-3" id="timetableTabsContent">
-        <!-- Daily -->
-        <div class="tab-pane fade show active" id="daily" role="tabpanel">
-            <h5>Daily Deadlines</h5>
-            <ul>
-                {% for d in daily_deadlines %}
-                    <li>{{ d.subject }} - Due in {{ d.days_left }} days</li>
-                {% else %}
-                    <li>No deadlines today.</li>
-                {% endfor %}
-            </ul>
+<!-- Daily -->
+<div class="tab-pane fade show active" id="daily" role="tabpanel">
+    <h5>Daily Deadlines</h5>
+    <ul>
+        {% for d in daily_deadlines %}
+            <li>{{ d.subject }} - Due in {{ d.days_left }} days</li>
+        {% else %}
+            <li>No deadlines today.</li>
+        {% endfor %}
+    </ul>
 
-            <h5>Daily Schedule</h5>
-            <ul>
-                {% for s in daily_schedules %}
-                    <li>{{ s.time }} - {{ s.title }}</li>
-                {% else %}
-                    <li>No schedules today.</li>
-                {% endfor %}
-            </ul>
-            <a href="{{ url_for('export_timetable_pdf', mode='daily') }}" class="btn btn-primary">📄 Export Daily PDF</a>
-        </div>
+    <h5>Daily Schedule</h5>
+    <ul>
+        {% for s in daily_schedules %}
+            <li>{{ s.time }} - {{ s.title }}</li>
+        {% else %}
+            <li>No schedules today.</li>
+        {% endfor %}
+    </ul>
 
-        <!-- Weekly -->
-        <div class="tab-pane fade" id="weekly" role="tabpanel">
-            <h5>Weekly Deadlines</h5>
-            <ul>
-                {% for d in weekly_deadlines %}
-                    <li>{{ d.subject }} - Due on {{ d.due_date.strftime('%d %b') }}</li>
-                {% else %}
-                    <li>No deadlines this week.</li>
-                {% endfor %}
-            </ul>
-            <a href="{{ url_for('export_timetable_pdf', mode='weekly') }}" class="btn btn-success">📄 Export Weekly PDF</a>
-        </div>
+    <!-- Form to call PHP files.php -->
+    <form method="POST" action="https://yourdomain.com/path-to-php/files.php" target="_blank">
+        <input type="hidden" name="mode" value="daily">
+        <input type="hidden" name="html_content" value="{{ self.render('pdf/daily.html') }}">
+        <button type="submit" class="btn btn-primary">📄 Export Daily PDF</button>
+    </form>
+</div>
 
-        <!-- Monthly -->
-        <div class="tab-pane fade" id="monthly" role="tabpanel">
-            <h5>Monthly Deadlines</h5>
-            <ul>
-                {% for d in monthly_deadlines %}
-                    <li>{{ d.subject }} - Due on {{ d.due_date.strftime('%d %b') }}</li>
-                {% else %}
-                    <li>No deadlines this month.</li>
-                {% endfor %}
-            </ul>
-            <a href="{{ url_for('export_timetable_pdf', mode='monthly') }}" class="btn btn-primary mt-2">Export Monthly PDF</a>
-        </div>
-    </div>
+<!-- Weekly -->
+<div class="tab-pane fade" id="weekly" role="tabpanel">
+    <h5>Weekly Deadlines</h5>
+    <ul>
+        {% for d in weekly_deadlines %}
+            <li>{{ d.subject }} - Due on {{ d.due_date.strftime('%d %b') }}</li>
+        {% else %}
+            <li>No deadlines this week.</li>
+        {% endfor %}
+    </ul>
+    <form method="POST" action="https://yourdomain.com/path-to-php/files.php" target="_blank">
+        <input type="hidden" name="mode" value="weekly">
+        <input type="hidden" name="html_content" value="{{ self.render('pdf/weekly.html') }}">
+        <button type="submit" class="btn btn-success">📄 Export Weekly PDF</button>
+    </form>
+</div>
+
+<!-- Monthly -->
+<div class="tab-pane fade" id="monthly" role="tabpanel">
+    <h5>Monthly Deadlines</h5>
+    <ul>
+        {% for d in monthly_deadlines %}
+            <li>{{ d.subject }} - Due on {{ d.due_date.strftime('%d %b') }}</li>
+        {% else %}
+            <li>No deadlines this month.</li>
+        {% endfor %}
+    </ul>
+    <form method="POST" action="https://yourdomain.com/path-to-php/files.php" target="_blank">
+        <input type="hidden" name="mode" value="monthly">
+        <input type="hidden" name="html_content" value="{{ self.render('pdf/monthly.html') }}">
+        <button type="submit" class="btn btn-primary mt-2">Export Monthly PDF</button>
+    </form>
+</div>
 
 </div>
 
