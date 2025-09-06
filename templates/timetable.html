@@ -65,7 +65,7 @@
     <form method="POST" action="https://yourdomain.com/path-to-php/files.php" target="_blank">
         <input type="hidden" name="mode" value="daily">
         <input type="hidden" name="html_content" value="{{ self.render('pdf/daily.html') }}">
-        <button type="submit" class="btn btn-primary">📄 Export Daily PDF</button>
+        <a href="{{ url_for('timetable_preview', mode='daily') }}" target="_blank" class="btn btn-primary">Preview Daily</a>
     </form>
 </div>
 
@@ -82,7 +82,8 @@
     <form method="POST" action="https://yourdomain.com/path-to-php/files.php" target="_blank">
         <input type="hidden" name="mode" value="weekly">
         <input type="hidden" name="html_content" value="{{ self.render('pdf/weekly.html') }}">
-        <button type="submit" class="btn btn-success">📄 Export Weekly PDF</button>
+        <a href="{{ url_for('timetable_preview', mode='weekly') }}" target="_blank" class="btn btn-success">Preview Weekly</a>
+
     </form>
 </div>
 
@@ -99,7 +100,8 @@
     <form method="POST" action="https://yourdomain.com/path-to-php/files.php" target="_blank">
         <input type="hidden" name="mode" value="monthly">
         <input type="hidden" name="html_content" value="{{ self.render('pdf/monthly.html') }}">
-        <button type="submit" class="btn btn-primary mt-2">Export Monthly PDF</button>
+        <a href="{{ url_for('timetable_preview', mode='monthly') }}" target="_blank" class="btn btn-primary">Preview Monthly</a>
+
     </form>
 </div>
 
