@@ -286,7 +286,7 @@ def export_timetable_pdf():
             html_content = render_template(template_name, **context)
             # Define the URL for your PHP PDF generation service
             # Replace this with the actual URL of your hosted PHP service
-            php_service_url = "https://studyplan.hstn.me/files.php"
+            php_service_url = "http://studyplan.hstn.me/files.php"
             # Send the rendered HTML to the PHP service via a POST request
             response = requests.post(php_service_url, data={'html_content': html_content, 'mode': mode})
             # Check if the request was successful and return the PDF
