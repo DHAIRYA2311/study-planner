@@ -1,16 +1,17 @@
 import json
 from datetime import datetime, timedelta, date
 import calendar
-from flask import Flask, render_template, request, redirect, session, url_for, make_response
+from flask import Flask, render_template, request, make_response, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
-import requests
+from weasyprint import HTML
 
 # ---------- APP SETUP ----------
 app = Flask(__name__)
-app.secret_key = "supersecret"  # change this in production
+app.secret_key = "supersecret"  # Change in production
 
 # ---------- DATA STORAGE ----------
 DATA_FILE = "data.json"
+
 def load_data():
     try:
         with open(DATA_FILE, "r") as f:
@@ -22,16 +23,7 @@ def save_data(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
-# ---------- ROUTES ----------
-@app.route("/")
-def index():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-    data = load_data()
-    user_tasks = [t for t in data["tasks"] if t["user_id"] == session["user_id"]]
-    user_deadlines = [d for d in data["deadlines"] if d["user_id"] == session["user_id"]]
-    return render_template("index.html", name=session["name"], tasks=user_tasks, deadlines=user_deadlines)
-
+# ---------- AUTH ROUTES ----------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -72,96 +64,17 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-@app.route("/tasks", methods=["GET", "POST"])
-def tasks():
+# ---------- HOME ----------
+@app.route("/")
+def index():
     if "user_id" not in session:
         return redirect(url_for("login"))
     data = load_data()
-    if request.method == "POST":
-        task_id = len(data["tasks"]) + 1
-        title = request.form["title"]
-        subject = request.form["subject"]
-        priority = request.form["priority"]
-        data["tasks"].append({
-            "id": task_id,
-            "title": title,
-            "subject": subject,
-            "priority": priority,
-            "status": "Pending",
-            "user_id": session["user_id"]
-        })
-        save_data(data)
     user_tasks = [t for t in data["tasks"] if t["user_id"] == session["user_id"]]
-    return render_template("tasks.html", tasks=user_tasks)
+    user_deadlines = [d for d in data["deadlines"] if d["user_id"] == session["user_id"]]
+    return render_template("index.html", name=session["name"], tasks=user_tasks, deadlines=user_deadlines)
 
-@app.route("/complete_task/<int:task_id>")
-def complete_task(task_id):
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-    data = load_data()
-    for task in data["tasks"]:
-        if task["id"] == task_id and task["user_id"] == session["user_id"]:
-            task["status"] = "Completed"
-            break
-    save_data(data)
-    return redirect(url_for("tasks"))
-
-@app.route("/deadlines", methods=["GET", "POST"])
-def deadlines():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-    data = load_data()
-    if request.method == "POST":
-        deadline_id = len(data["deadlines"]) + 1
-        subject = request.form["subject"]
-        due_date = request.form["due_date"]
-        data["deadlines"].append({
-            "id": deadline_id,
-            "subject": subject,
-            "due_date": due_date,
-            "user_id": session["user_id"]
-        })
-        save_data(data)
-    user_deadlines = []
-    for d in data["deadlines"]:
-        if d["user_id"] == session["user_id"]:
-            try:
-                due_date_obj = datetime.strptime(d["due_date"], "%Y-%m-%d")
-                days_left = (due_date_obj - datetime.now()).days
-            except:
-                days_left = None
-            user_deadlines.append({
-                "id": d["id"],
-                "subject": d["subject"],
-                "due_date": d["due_date"],
-                "days_left": days_left
-            })
-    return render_template("deadlines.html", deadlines=user_deadlines)
-
-@app.route("/schedule", methods=["GET", "POST"])
-def schedule():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-    data = load_data()
-    if request.method == "POST":
-        schedule_id = len(data.get("schedules", [])) + 1
-        title = request.form["title"]
-        time = request.form["time"]
-        day = request.form.get("day", datetime.today().strftime("%Y-%m-%d"))
-        if "schedules" not in data:
-            data["schedules"] = []
-        data["schedules"].append({
-            "id": schedule_id,
-            "user_id": session["user_id"],
-            "title": title,
-            "time": time,
-            "day": day
-        })
-        save_data(data)
-    today = datetime.today().strftime("%Y-%m-%d")
-    user_schedules = [s for s in data.get("schedules", []) if s["user_id"] == session["user_id"] and s["day"] == today]
-    return render_template("schedule.html", schedules=user_schedules)
-
+# ---------- TIMETABLE ----------
 @app.route("/timetable")
 def timetable():
     if "user_id" not in session:
@@ -185,10 +98,7 @@ def timetable():
     daily_deadlines = [d for d in all_deadlines if d["due_date"] == today]
     weekly_deadlines = [d for d in all_deadlines if 0 <= d["days_left"] <= 7]
     monthly_deadlines = [d for d in all_deadlines if d["due_date"].month == today.month and d["due_date"].year == today.year]
-    daily_schedules = []
-    for s in data.get("schedules", []):
-        if s["user_id"] == session["user_id"] and s.get("day") == today.strftime("%Y-%m-%d"):
-            daily_schedules.append(s)
+    daily_schedules = [s for s in data.get("schedules", []) if s["user_id"] == session["user_id"] and s.get("day") == today.strftime("%Y-%m-%d")]
     return render_template("timetable.html",
                            user=current_user,
                            today=today,
@@ -197,111 +107,25 @@ def timetable():
                            monthly_deadlines=monthly_deadlines,
                            daily_schedules=daily_schedules)
 
-@app.route("/pomodoro")
-def pomodoro():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-    return render_template("pomodoro.html")
-
-# ---------- EXPORT TIMETABLE TO PDF ----------
-@app.route("/export_timetable_pdf")
-def export_timetable_pdf():
+# ---------- PDF GENERATION ----------
+@app.route("/generate-pdf", methods=["POST"])
+def generate_pdf():
     try:
-        if "user_id" not in session:
-            return redirect(url_for("login"))
-        mode = request.args.get("mode", "daily").lower()
-        today = datetime.today().date()
-        data = load_data()
-        current_user = next((u for u in data.get("users", []) if u["id"] == session["user_id"]), None)
-        if not current_user:
-            return "User not found", 404
-        all_deadlines = []
-        for d in data.get("deadlines", []):
-            if d["user_id"] == session["user_id"]:
-                try:
-                    due_date = datetime.strptime(d["due_date"], "%Y-%m-%d").date()
-                    days_left = (due_date - today).days
-                    all_deadlines.append({
-                        "subject": d["subject"],
-                        "due_date": due_date,
-                        "days_left": days_left
-                    })
-                except Exception as e:
-                    print(f"Error processing deadline: {e}")
-                    continue
-        user_schedules = []
-        for s in data.get("schedules", []):
-            if s["user_id"] == session["user_id"]:
-                try:
-                    user_schedules.append({
-                        "title": s["title"],
-                        "time": s["time"],
-                        "day": s["day"]
-                    })
-                except Exception as e:
-                    print(f"Error processing schedule: {e}")
-                    continue
-        context = {
-            "user": current_user,
-            "today": today
-        }
-        template_name = ""
-        if mode == "weekly":
-            template_name = "pdf/weekly.html"
-            start_date = today - timedelta(days=today.weekday())
-            end_date = start_date + timedelta(days=6)
-            weekly_deadlines = [d for d in all_deadlines if start_date <= d["due_date"] <= end_date]
-            weekly_schedules = [s for s in user_schedules if
-                                start_date <= datetime.strptime(s.get("day", "1900-01-01"), "%Y-%m-%d").date() <= end_date]
-            context.update({
-                "weekly_deadlines": weekly_deadlines,
-                "weekly_schedules": weekly_schedules,
-                "start_date": start_date,
-                "end_date": end_date
-            })
-        elif mode == "monthly":
-            template_name = "pdf/monthly.html"
-            month_start = today.replace(day=1)
-            _, last_day = calendar.monthrange(today.year, today.month)
-            month_end = month_start.replace(day=last_day)
-            monthly_deadlines = [d for d in all_deadlines if d["due_date"].month == today.month and d["due_date"].year == today.year]
-            context.update({
-                "monthly_deadlines": monthly_deadlines,
-                "month": today.month,
-                "year": today.year,
-                "month_name": today.strftime("%B"),
-                "timedelta": timedelta
-            })
+        data = request.get_json()
+        html_content = data.get("html_content", "")
+        mode = data.get("mode", "daily")
+        if not html_content:
+            return "HTML content missing", 400
 
-        else:  # daily
-            template_name = "pdf/daily.html"
-            daily_deadlines = [d for d in all_deadlines if d["due_date"] == today]
-            daily_schedules = [s for s in user_schedules if s.get("day") == today.strftime("%Y-%m-%d")]
-            context.update({
-                "daily_deadlines": daily_deadlines,
-                "daily_schedules": daily_schedules
-            })
-        try:
-            # Render the HTML template with the correct context
-            html_content = render_template(template_name, **context)
-            # Define the URL for your PHP PDF generation service
-            # Replace this with the actual URL of your hosted PHP service
-            php_service_url = "http://studyplan.hstn.me/files.php"
-            # Send the rendered HTML to the PHP service via a POST request
-            response = requests.post(php_service_url, data={'html_content': html_content, 'mode': mode})
-            # Check if the request was successful and return the PDF
-            if response.status_code == 200:
-                pdf_data = response.content
-                pdf_response = make_response(pdf_data)
-                pdf_response.headers['Content-Type'] = 'application/pdf'
-                pdf_response.headers['Content-Disposition'] = f'inline; filename=timetable_{mode}.pdf'
-                return pdf_response
-            else:
-                return f"Error from PHP service: {response.text}", 500
-        except Exception as e:
-            return f"Error during PDF generation: {str(e)}", 500
+        # Generate PDF using WeasyPrint
+        pdf_file = HTML(string=html_content).write_pdf()
+
+        response = make_response(pdf_file)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'inline; filename=timetable_{mode}.pdf'
+        return response
     except Exception as e:
-        return f"Error during PDF generation: {str(e)}", 500
+        return f"Error generating PDF: {e}", 500
 
 # ---------- RUN ----------
 if __name__ == "__main__":
