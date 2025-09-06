@@ -288,12 +288,7 @@ def export_timetable_pdf():
             # Replace this with the actual URL of your hosted PHP service
             php_service_url = "https://studyplan.hstn.me/files.php"
             # Send the rendered HTML to the PHP service via a POST request
-            response = requests.post(
-            php_service_url,
-            data={'html_content': html_content, 'mode': mode},
-            verify=False  # skip SSL check just for testing
-        )
-
+            response = requests.post(php_service_url, data={'html_content': html_content, 'mode': mode})
             # Check if the request was successful and return the PDF
             if response.status_code == 200:
                 pdf_data = response.content
