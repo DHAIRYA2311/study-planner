@@ -1,0 +1,89 @@
+{
+    "users": [
+        {
+            "id": 1,
+            "name": "Maurya Amin",
+            "email": "mauryaamin@gmail.com",
+            "password": "scrypt:32768:8:1$SNB8IWAXyjDOm0DA$4c119a014cae04c6ce12a26bc59a0942c6a44f484a61a5f2836f214897649c4d113a378c8d232e1c8febd4c9d81fb02936aa5bc01ca94e301e17fd2f0b7561c2"
+        },
+        {
+            "id": 2,
+            "name": "ARS Student",
+            "email": "student@gmail.com",
+            "password": "scrypt:32768:8:1$fK6Pv3RBSvbpxc3q$7ff4e0efeae08cf861300ab914ae07b99d07dc131ddca73e6b7c30a3a14234f38038e6d891ca030e874c2afe8e0679e7bebdb610c259fa6ded0e675de3053004"
+        }
+    ],
+    "tasks": [
+        {
+            "id": 1,
+            "title": "Task 1",
+            "subject": "Maths",
+            "priority": "High",
+            "status": "Completed",
+            "user_id": 1
+        },
+        {
+            "id": 2,
+            "title": "Task 1",
+            "subject": "Maths",
+            "priority": "High",
+            "status": "Completed",
+            "user_id": 1
+        },
+        {
+            "id": 3,
+            "title": "Task 1",
+            "subject": "Maths",
+            "priority": "High",
+            "status": "Pending",
+            "user_id": 1
+        },
+        {
+            "id": 4,
+            "title": "Homework Maths (TUITION)",
+            "subject": "Maths",
+            "priority": "High",
+            "status": "Completed",
+            "user_id": 1
+        },
+        {
+            "id": 5,
+            "title": "Exam Prep",
+            "subject": "Maths",
+            "priority": "Medium",
+            "status": "Pending",
+            "user_id": 1
+        }
+    ],
+    "deadlines": [
+        {
+            "id": 1,
+            "subject": "Empower Exam",
+            "due_date": "2025-09-19",
+            "user_id": 1
+        }
+    ],
+    "schedules": [
+        {
+            "id": 1,
+            "user_id": 1,
+            "title": "School ",
+            "time": "08:00 - 12:00",
+            "day": "2025-09-05"
+        },
+        {
+            "id": 2,
+            "user_id": 1,
+            "title": "Tuition",
+            "time": "04:30 - 06:00 ",
+            "day": "2025-09-05"
+        },
+        {
+            "id": 3,
+            "user_id": 1,
+            "title": "Homework (School)",
+            "time": "02:00 - 03:00",
+            "day": "2025-09-05"
+        }
+    ]
+}

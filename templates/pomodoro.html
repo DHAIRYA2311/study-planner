@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons for the info button -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f0f4f8;
+        }
+
+        .pomodoro-container {
+            background-color: #fff;
+            padding: 2rem 3rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        /* Custom styles to mimic the original design a bit more, but with Bootstrap's grid */
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .info-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="d-flex justify-content-center align-items-center min-vh-100">
+    <div class="pomodoro-container">
+        <h1 class="text-secondary fw-bold">Pomodoro Timer</h1>
+        <div class="info-button" data-bs-toggle="modal" data-bs-target="#infoModal">
+            <i class="bi bi-info-circle-fill"></i>
+        </div>
+        <div class="display-1 fw-bold text-primary my-5" id="timer">25:00</div>
+        <div class="buttons-container">
+            <button class="btn btn-success btn-lg rounded-pill shadow" id="start-button">Start</button>
+            <button class="btn btn-warning btn-lg rounded-pill shadow" id="pause-button" style="display: none;">Pause</button>
+            <button class="btn btn-danger btn-lg rounded-pill shadow" id="reset-button">Reset</button>
+        </div>
+        <div class="fs-5 text-muted mt-4" id="session-info">Time to focus!</div>
+    </div>
+</div>
+
+<!-- Info Modal -->
+<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="infoModalLabel">How to use the Pomodoro Timer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>The Pomodoro Technique is a time management method that uses a timer to break down work into intervals, typically 25 minutes in length, separated by short breaks.</p>
+                <ol>
+                    <li>**Work Session:** Focus on a single task for **25 minutes**.</li>
+                    <li>**Short Break:** Take a **5-minute** break after each work session.</li>
+                    <li>**Long Break:** After four work sessions, take a longer break of **15-30 minutes**.</li>
+                </ol>
+                <p>Use the buttons below to control the timer:</p>
+                <ul>
+                    <li>**Start:** Begins the work session timer.</li>
+                    <li>**Pause:** Temporarily stops the timer.</li>
+                    <li>**Reset:** Resets the timer to the beginning of the current session.</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const timerDisplay = document.getElementById('timer');
+    const startButton = document.getElementById('start-button');
+    const pauseButton = document.getElementById('pause-button');
+    const resetButton = document.getElementById('reset-button');
+    const sessionInfo = document.getElementById('session-info');
+
+    let isWorkSession = true;
+    let isPaused = true;
+    let timerInterval;
+
+    const WORK_TIME = 25 * 60; // 25 minutes in seconds
+    const BREAK_TIME = 5 * 60; // 5 minutes in seconds
+    let timeLeft = WORK_TIME;
+
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+    }
+
+    function updateTimer() {
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            if (isWorkSession) {
+                // Play a sound or show a notification for the break
+                sessionInfo.textContent = "Take a short break!";
+                timeLeft = BREAK_TIME;
+            } else {
+                // Play a sound or show a notification for the next work session
+                sessionInfo.textContent = "Time to focus!";
+                timeLeft = WORK_TIME;
+            }
+            isWorkSession = !isWorkSession;
+            isPaused = true;
+            toggleButtons();
+            return;
+        }
+        timeLeft--;
+        timerDisplay.textContent = formatTime(timeLeft);
+    }
+
+    function toggleButtons() {
+        if (isPaused) {
+            startButton.style.display = 'inline-block';
+            pauseButton.style.display = 'none';
+        } else {
+            startButton.style.display = 'none';
+            pauseButton.style.display = 'inline-block';
+        }
+    }
+
+    startButton.addEventListener('click', () => {
+        isPaused = false;
+        toggleButtons();
+        timerInterval = setInterval(updateTimer, 1000);
+    });
+
+    pauseButton.addEventListener('click', () => {
+        isPaused = true;
+        toggleButtons();
+        clearInterval(timerInterval);
+    });
+
+    resetButton.addEventListener('click', () => {
+        clearInterval(timerInterval);
+        isPaused = true;
+        isWorkSession = true;
+        timeLeft = WORK_TIME;
+        timerDisplay.textContent = formatTime(timeLeft);
+        sessionInfo.textContent = "Time to focus!";
+        toggleButtons();
+    });
+
+    // Initial display
+    timerDisplay.textContent = formatTime(timeLeft);
+</script>
+
+</body>
+</html>

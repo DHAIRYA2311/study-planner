@@ -1,0 +1,45 @@
+/* Smart Study Planner Custom Styles */
+
+/* Body styling */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Center the cards on login/register */
+.card {
+    border-radius: 12px;
+}
+
+/* Buttons hover effect */
+.btn:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+    transition: 0.2s;
+}
+
+/* Navbar shadow */
+.navbar {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* Tables */
+.table th, .table td {
+    vertical-align: middle;
+    text-align: center;
+}
+
+/* Task priority coloring */
+.badge {
+    font-size: 0.9rem;
+}
+
+/* Countdown badges */
+.badge.bg-warning {
+    font-weight: 600;
+}
+.badge.bg-danger {
+    font-weight: 600;
+}
+.badge.bg-secondary {
+    font-weight: 600;
+}
