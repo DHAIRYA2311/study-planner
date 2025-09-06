@@ -127,16 +127,16 @@ def generate_pdf():
     except Exception as e:
         return f"Error generating PDF: {e}", 500
 
-@app.route("/timetable-preview/<mode>")
-def timetable_preview(mode="daily"):
+@app.route("/timetable_preview")
+def timetable_preview():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
+    mode = request.args.get("mode", "daily").lower()
     today = datetime.today().date()
     data = load_data()
     current_user = next((u for u in data.get("users", []) if u["id"] == session["user_id"]), None)
 
-    # Gather deadlines and schedules
     all_deadlines = []
     for d in data.get("deadlines", []):
         if d["user_id"] == session["user_id"]:
@@ -151,21 +151,33 @@ def timetable_preview(mode="daily"):
             except:
                 continue
 
-    daily_deadlines = [d for d in all_deadlines if d["due_date"] == today]
-    weekly_deadlines = [d for d in all_deadlines if 0 <= d["days_left"] <= 7]
-    monthly_deadlines = [d for d in all_deadlines if d["due_date"].month == today.month and d["due_date"].year == today.year]
-    
-    daily_schedules = [s for s in data.get("schedules", []) if s["user_id"] == session["user_id"] and s.get("day") == today.strftime("%Y-%m-%d")]
+    user_schedules = [s for s in data.get("schedules", []) if s["user_id"] == session["user_id"]]
 
-    # Choose template based on mode
-    template_name = f"pdf/{mode}.html"  # daily.html, weekly.html, monthly.html
-    return render_template(template_name,
-                           user=current_user,
-                           today=today,
-                           daily_deadlines=daily_deadlines,
-                           weekly_deadlines=weekly_deadlines,
-                           monthly_deadlines=monthly_deadlines,
-                           daily_schedules=daily_schedules)
+    context = {"user": current_user, "today": today}
+
+    if mode == "daily":
+        daily_deadlines = [d for d in all_deadlines if d["due_date"] == today]
+        daily_schedules = [s for s in user_schedules if s.get("day") == today.strftime("%Y-%m-%d")]
+        context.update({"daily_deadlines": daily_deadlines, "daily_schedules": daily_schedules})
+        template_name = "pdf/daily.html"
+    elif mode == "weekly":
+        start_date = today - timedelta(days=today.weekday())
+        end_date = start_date + timedelta(days=6)
+        weekly_deadlines = [d for d in all_deadlines if start_date <= d["due_date"] <= end_date]
+        weekly_schedules = [s for s in user_schedules if start_date <= datetime.strptime(s.get("day", "1900-01-01"), "%Y-%m-%d").date() <= end_date]
+        context.update({"weekly_deadlines": weekly_deadlines, "weekly_schedules": weekly_schedules, "start_date": start_date, "end_date": end_date})
+        template_name = "pdf/weekly.html"
+    else:
+        month_start = today.replace(day=1)
+        _, last_day = calendar.monthrange(today.year, today.month)
+        month_end = month_start.replace(day=last_day)
+        monthly_deadlines = [d for d in all_deadlines if d["due_date"].month == today.month and d["due_date"].year == today.year]
+        monthly_schedules = [s for s in user_schedules if datetime.strptime(s.get("day", "1900-01-01"), "%Y-%m-%d").month == today.month]
+        context.update({"monthly_deadlines": monthly_deadlines, "monthly_schedules": monthly_schedules})
+        template_name = "pdf/monthly.html"
+
+    return render_template(template_name, **context)
+
 
 
 # ---------- RUN ----------
